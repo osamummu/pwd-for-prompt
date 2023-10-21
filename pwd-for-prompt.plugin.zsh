@@ -119,9 +119,9 @@ function pwd-for-prompt() (
         gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`"
         path_after_gitroot="`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" "^${res}\$"`"
 
-        echo "${ZSH_PWD4PROMPT_GITROOT_PREFIX}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}/${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}/${path_after_gitroot#/}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}"
+        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}/${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}/${path_after_gitroot#/}${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
     else
-        echo "${ZSH_PWD4PROMPT_GITROOT_PREFIX}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"`${ZSH_PWD4PROMPT_GITROOT_SUFFIX}"
+        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"`${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
     fi
 )
 
