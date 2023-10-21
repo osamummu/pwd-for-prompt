@@ -119,58 +119,15 @@ function pwd-for-prompt() (
         gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`"
         path_after_gitroot="`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" "^${res}\$"`"
 
-        echo "$gitroot_short_path/$ZSH_PWD4PROMPT_GITROOT_PREFIX$gitroot_basename$ZSH_PWD4PROMPT_GITROOT_SUFFIX/${path_after_gitroot#/}"
+        echo "${ZSH_PWD4PROMPT_GITROOT_PREFIX}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}/${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}/${path_after_gitroot#/}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}"
     else
-        _zsh_pwd4prompt_short_path \
-            "$PWD" \
-            "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"
+        echo "${ZSH_PWD4PROMPT_GITROOT_PREFIX}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"`${ZSH_PWD4PROMPT_GITROOT_SUFFIX}"
     fi
 )
 
-#function pwd-for-prompt() {
-#    if [ "$PWD" = "$HOME" ]; then
-#        echo "~"
-#    elif [[ "$PWD" =~ "$HOME" ]]; then
-#        local git_dir_parent=""
-#        local drctry="$PWD"
-#        while [ "$drctry" != "$HOME" ]; do
-#            if [ -d "$drctry/.git" ]; then
-#                local git_dir_parent="$(echo $drctry|sed "s\`/$(basename ${drctry})\$\`\`")"
-#                break
-#            fi
-#            local drctry="$(echo $drctry|sed "s\`/$(basename ${drctry})\$\`\`")"
-#        done
-#
-#        if [ "$git_dir_parent" != "" ]; then
-#            echo "Git'$(echo $PWD|sed "s\`^${git_dir_parent}/\`\`")"
-#            return
-#        else
-#            local drctry="$PWD"
-#            local i=0
-#            while [ "$drctry" != "$HOME" ] \
-#                && [ "$i" -lt "$PWD_FOR_PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" ]
-#            do
-#                if [ -d "$drctry/.git" ]; then
-#                    local git_dir_parent="$(echo $drctry|sed "s\`/$(basename ${drctry})\$\`\`")"
-#                    break
-#                fi
-#                local drctry="$(echo $drctry|sed "s\`/$(basename ${drctry})\$\`\`")"
-#                let i++
-#            done
-#            local echoval="$(echo $PWD|sed "s\`^${drctry}\`\`")"
-#
-#            if [ "$i" -lt "$PWD_FOR_PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" ] \
-#                || [ "$drctry" = "$HOME" ]; then
-#                echo "~$echoval"
-#            else
-#                echo "(ry'$echoval"
-#            fi
-#            return
-#        fi
-#    else
-#        echo "$PWD"
-#    fi
-#}
+
+
+
 
 ############################################
 #                Settings
@@ -179,13 +136,30 @@ function pwd-for-prompt() (
 # The number of parent directories to display
 ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY="3"
 
-# The prefix and suffix of the directory containing ".git".
-ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}`_zsh_pwd4prompt_gui_cui '' 'Git:'`"
-ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}"
-
 # The array of directory pattern to ignore when searching for ".git".
 # The pattern is such that "[[ "$PWD" =~ "PATTERN" ]]" is true
 ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )
+
+
+
+
+
+############################################
+#                 Theme
+############################################
+
+# TODO: delimiter
+# ZSH_PWD4PROMPT_DELIMITER="/"
+# TODO: directory style
+# ZSH_PWD4PROMPT_PATH_STYLE="%{$fg_bold[cyan]%}"
+
+# prefix and suffix to whole
+ZSH_PWD4PROMPT_PREFIX_TO_WHOLE="%{$fg_bold[cyan]%}"
+ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE="%{${reset_color}%}"
+
+# The prefix and suffix of the directory containing ".git".
+ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}`_zsh_pwd4prompt_gui_cui '' 'Git:'`"
+ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}"
 
 
 
