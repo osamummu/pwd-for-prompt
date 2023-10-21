@@ -159,7 +159,7 @@ ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE="%{${reset_color}%}"
 
 # The prefix and suffix of the directory containing ".git".
 ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}`_zsh_pwd4prompt_gui_cui '' 'Git:'`"
-ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}"
+ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}"
 
 
 
