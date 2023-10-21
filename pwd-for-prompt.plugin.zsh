@@ -95,7 +95,7 @@ function _zsh_pwd4prompt_path_depth_difference() (
     shallower="$2"
     i=0
     cd "$deeper"
-    while [ "$PWD" != "$shallower" ] || [[ "$PWD" =~ "^${HOME}\$" ]]; do
+    while [ "$PWD" != "$shallower" ] && [ "$i" -lt "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" ]; do
         cd ..
         let i++
     done
