@@ -111,15 +111,17 @@ function pwd-for-prompt() (
         gitroot_parent_path="`(cd "$res/.."; echo "$PWD")`" # "
         # NOTE: I added the comment at the end of the above line because my
         # Vim's highlighting causes a problem with the line.
-        gitroot_basename="`basename "$res"`"
         depth="`_zsh_pwd4prompt_path_depth_difference "$PWD" "$gitroot_parent_path"`"
-        echo "$depth"
         depth="$(( ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY - depth ))"
-        [ "$depth" -gt "0" ] || depth="0"
-        gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`"
-        path_after_gitroot="`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" "^${res}\$"`"
+        [ "$depth" -lt "0" ] && depth="0"
+        gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`/"
+        gitroot_basename="`basename "$res"`"
+        if [ "$res" != "$PWD" ]; then
+            path_after_gitroot="/`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" "^${res}\$"`"
+            path_after_gitroot="${path_after_gitroot#/}"
+        fi
 
-        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}/${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}/${path_after_gitroot#/}${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
+        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}${path_after_gitroot-""}${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}" # "
     else
         echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"`${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
     fi
