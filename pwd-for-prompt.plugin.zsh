@@ -14,36 +14,34 @@
 #                Functions
 ############################################
 
-function _zsh_pwd4prompt_gui_cui() (
-    [ "${DISPLAY}" ] && echo "$1" || echo "$2"
-)
+autoload -U colors && colors
+setopt prompt_subst
 
-# Returns the path of the directory where the first ".git" between the current
-# directory and "$HOME" or "/" exists. Returns blank if not found.
+# disable promptinit
+(( $+functions[promptinit] )) && {promptinit; prompt off}
+
+function _zsh_pwd4prompt_gui_cui() {
+    (( ${+DISPLAY} )) && echo "$1" || echo "$2"
+}
+
+# Echo the path of the directory where the first ".git" between the current
+# directory and "/" exists. Echo blank if not found.
 # ".git" in directories that match the pattern written in
-# ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS will be ignored.
-function _zsh_pwd4prompt_search_gitroot_path() (
-    retval=""
-    while true ; do
-        unset docontinue
-        for pattern in ${ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS}; do
-            if [[ "${PWD}" =~ "${pattern}" ]]; then docontinue="1"; break; fi
-        done
-
-        if [ ! "${docontinue}" ]; then
-            if [ -d "$PWD/.git" ]; then
-                retval="$PWD"
-                break 
-            fi
-        fi
-
-        [[ "$PWD" =~ "^$HOME\$|^/\$" ]] \
-            && break \
-            || cd ..
-    done
-
-    echo ${retval}
-)
+# ZSH_PWD4PROMPT_GITTOP_SEARCH_EXCLUSION_PATTERN will be ignored.
+function _zsh_pwd4prompt_search_gitroot_path() {
+    local res=""
+    type git &>/dev/null \
+        && local res="$(command git rev-parse --show-toplevel 2>/dev/null)" \
+        || local res="$(
+            while builtin true; do
+                [[ -d "$PWD/${GIT_DIR-.git}" ]] && { builtin echo "$PWD"; break }
+                cd ..
+                [[ "$PWD" =~ "^/\$" ]] && return
+            done
+        )"
+    [[ "$res" =~ "$ZSH_PWD4PROMPT_GITTOP_SEARCH_EXCLUSION_PATTERN" ]] \
+        || builtin echo "$res"
+}
 
 
 function _zsh_pwd4prompt_short_path() (
@@ -52,25 +50,23 @@ function _zsh_pwd4prompt_short_path() (
     TOPATH="${3-"^$HOME\$|^/\$"}"
     retval=""
 
-    [ "$TARGET_PATH" = "/" ] && {echo "/";return}
+    [[ "$TARGET_PATH" = "/" ]] && {echo "/";return}
 
-    [ "${_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED}" ] && unsetopt ksharrays
+    (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && unsetopt ksharrays
 
     cd "$TARGET_PATH"
 
     i=0
-    while [[ ! "$PWD" =~ "$TOPATH" ]] \
-        && [ "$i" -lt "$NUM_NOT_TO_BE_OMITTED" ];
-    do
-        basename="`basename "$PWD"`"
+    while [[ ! "$PWD" =~ "$TOPATH" && "$i" -lt "$NUM_NOT_TO_BE_OMITTED" ]]; do
+        basename="${PWD##*/}"
         retval="/${basename}${retval}"
         cd ..
         let i++
     done
 
-    if [ "$i" -ge "$NUM_NOT_TO_BE_OMITTED" ]; then
+    if [[ "$i" -ge "$NUM_NOT_TO_BE_OMITTED" ]]; then
         while [[ ! "$PWD" =~ "$TOPATH" ]]; do
-            basename="`basename "$PWD"`"
+            basename="${PWD##*/}"
             if [ "${basename[1]}" = "." ]; then
                 retval="/.${basename[2]}${retval}"
             else
@@ -80,11 +76,11 @@ function _zsh_pwd4prompt_short_path() (
         done
     fi
 
-    if [ "$PWD" = "$HOME" ]; then
+    if [[ "$PWD" = "$HOME" ]]; then
         retval="~${retval}"
     fi
 
-    [ "${_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED}" ] && setopt ksharrays
+    (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && setopt ksharrays
 
     echo "${retval}"
 )
@@ -95,7 +91,7 @@ function _zsh_pwd4prompt_path_depth_difference() (
     shallower="$2"
     i=0
     cd "$deeper"
-    while [ "$PWD" != "$shallower" ] && [ "$i" -lt "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" ]; do
+    while [[ "$PWD" != "$shallower" && "$i" -lt "$ZSH_PWD4PROMPT_NUM_OF_DIRS_TO_DISPLAY" ]]; do
         cd ..
         let i++
     done
@@ -104,64 +100,73 @@ function _zsh_pwd4prompt_path_depth_difference() (
 )
 
 
-function pwd-for-prompt() (
+function pwd-for-prompt() {
     res="`_zsh_pwd4prompt_search_gitroot_path`"
-    if [ -n "$res" ]; then
-        # .git found
-        gitroot_parent_path="`(cd "$res/.."; echo "$PWD")`" # "
-        # NOTE: I added the comment at the end of the above line because my
-        # Vim's highlighting causes a problem with the line.
-        depth="`_zsh_pwd4prompt_path_depth_difference "$PWD" "$gitroot_parent_path"`"
-        depth="$(( ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY - depth ))"
-        [ "$depth" -lt "0" ] && depth="0"
-        gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`/"
-        gitroot_basename="`basename "$res"`"
-        if [ "$res" != "$PWD" ]; then
-            path_after_gitroot="/`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY" "^${res}\$"`"
-            path_after_gitroot="${path_after_gitroot#/}"
-        fi
+    [[ -n "$res" ]] \
+        && {
+            # ".git" found
+            gitroot_parent_path="${PWD%/*}" # " ← Without this comment, my Vim's highlighting breaks.
+            depth="`_zsh_pwd4prompt_path_depth_difference "$PWD" "$gitroot_parent_path"`"
+            depth="$(( ZSH_PWD4PROMPT_NUM_OF_DIRS_TO_DISPLAY - depth ))"
+            [[ "$depth" -lt "0" ]] && depth="0"
+            gitroot_short_path="`_zsh_pwd4prompt_short_path "$gitroot_parent_path" "$depth"`/"
+            gitroot_basename="${res##*/}"
+            [[ "$res" != "$PWD" ]] && {
+                path_after_gitroot="/`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUM_OF_DIRS_TO_DISPLAY" "^${res}\$"`"
+                path_after_gitroot="${path_after_gitroot#/}"
+            }
 
-        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}${ZSH_PWD4PROMPT_PATH_STYLE}${gitroot_short_path}${ZSH_PWD4PROMPT_GITROOT_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITROOT_SUFFIX}${path_after_gitroot-""}${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}" # "
-    else
-        echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY"`${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
-    fi
-)
+            echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}${gitroot_short_path}${ZSH_PWD4PROMPT_GITTOP_PREFIX}${gitroot_basename}${ZSH_PWD4PROMPT_GITTOP_SUFFIX}${path_after_gitroot-""}${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}" # "
+        } \
+        || \
+            echo "${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}`_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUM_OF_DIRS_TO_DISPLAY"`${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
+}
 
 
 
 
 
 ############################################
-#                Settings
+#            Default  Settings
 ############################################
 
 # The number of parent directories to display
-ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY="3"
+ZSH_PWD4PROMPT_DEFAULT_NUM_OF_DIRS_TO_DISPLAY="3"
 
-# The array of directory pattern to ignore when searching for ".git".
+# The list of directory pattern to ignore when searching for ".git".
 # The pattern is such that "[[ "$PWD" =~ "PATTERN" ]]" is true
-ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )
+ZSH_PWD4PROMPT_DEFAULT_GITTOP_SEARCH_EXCLUSION_PATTERN="^${HOME}\$"
 
 
 
 
 
 ############################################
-#                 Theme
+#              Default Theme
 ############################################
-
-# TODO: delimiter
-# ZSH_PWD4PROMPT_DELIMITER="/"
-# TODO: directory style
-# ZSH_PWD4PROMPT_PATH_STYLE="%{$fg_bold[cyan]%}"
 
 # prefix and suffix to whole
-ZSH_PWD4PROMPT_PREFIX_TO_WHOLE="%{$fg_bold[cyan]%}"
-ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE="%{${reset_color}%}"
+ZSH_PWD4PROMPT_DEFAULT_PREFIX_TO_WHOLE="%{$fg_bold[cyan]%}"
+ZSH_PWD4PROMPT_DEFAULT_SUFFIX_TO_WHOLE="%{${reset_color}%}"
 
 # The prefix and suffix of the directory containing ".git".
-ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}`_zsh_pwd4prompt_gui_cui '' 'Git:'`"
-ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}"
+ZSH_PWD4PROMPT_DEFAULT_GITTOP_PREFIX="%{$fg_bold[yellow]%}`_zsh_pwd4prompt_gui_cui '' 'Git:'`"
+ZSH_PWD4PROMPT_DEFAULT_GITTOP_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_DEFAULT_PREFIX_TO_WHOLE}"
+
+
+
+
+
+############################################
+#           Initalize variables
+############################################
+
+: ${ZSH_PWD4PROMPT_NUM_OF_DIRS_TO_DISPLAY="$ZSH_PWD4PROMPT_DEFAULT_NUM_OF_DIRS_TO_DISPLAY"}
+: ${ZSH_PWD4PROMPT_GITTOP_SEARCH_EXCLUSION_PATTERN="$ZSH_PWD4PROMPT_DEFAULT_GITTOP_SEARCH_EXCLUSION_PATTERN"}
+: ${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE="$ZSH_PWD4PROMPT_DEFAULT_PREFIX_TO_WHOLE"}
+: ${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE="$ZSH_PWD4PROMPT_DEFAULT_SUFFIX_TO_WHOLE"}
+: ${ZSH_PWD4PROMPT_GITTOP_PREFIX="$ZSH_PWD4PROMPT_DEFAULT_GITTOP_PREFIX"}
+: ${ZSH_PWD4PROMPT_GITTOP_SUFFIX="$ZSH_PWD4PROMPT_DEFAULT_GITTOP_SUFFIX"}
 
 
 
@@ -171,7 +176,7 @@ ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_PREFIX_TO_WHOL
 # Delete variables used within this program
 ############################################
 
-for variable in `set|grep "_ZSH_PWD4PROMPT_"`; do
-    unset "$variable"
+for var in `builtin set`; do
+    [[ "$var" =~ "^_ZSH_PWD4PROMPT_*" ]] && unset "${var:0:((${(N)var#*=}-1))}"
 done
 
