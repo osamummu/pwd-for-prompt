@@ -44,46 +44,90 @@ function _zsh_pwd4prompt_search_gitroot_path() {
 }
 
 
-function _zsh_pwd4prompt_short_path() (
-    TARGET_PATH="$1"
-    NUM_NOT_TO_BE_OMITTED="$2"
-    TOPATH="${3-"^$HOME\$|^/\$"}"
-    retval=""
+(( ${+ZSH_PWD4PROMPT} )) || typeset -A ZSH_PWD4PROMPT
+# ディレクトリ名を短くするときの長さ
+# Ex) if this option is "2": /foo/bar/ → /fo/ba/
+: ${ZSH_PWD4PROMPT[length_if_shortening]="1"}
+# 隠しディレクトリを短縮するときに特別なあつかいをするか
+# Ex) if this option is "1": /.foo/ → /.f/
+#     if this option is "0": /.foo/ → /./
+: ${ZSH_PWD4PROMPT[enable_special_shortening_of_hidden_dirs]="1"}
+# pwd-for-promptの出力の最大幅。数字のみで絶対値、%を末尾に付けると画面幅に対する相対値
+: ${ZSH_PWD4PROMPT[max_width]="33%"}
+# ZSH_PWD4PROMPT[max_width]を超えるときに
+: ${ZSH_PWD4PROMPT[enable_multiple_dirs_omission_with_forcing]="1"}
+# 長過ぎるpathを省略するときに代わりに出力する文字列（"#"が省略したディレクトリ数に置き換えられる。"##"は"#"に）
+: ${ZSH_PWD4PROMPT[str_replacing_multiple_omitted_dirs]="…#"}
+# cwdの親ディレクトリの短縮しない個数
+# Ex) if this option is "2": /abcd/efgh/ijkl/mnop/qrst/CWD → /a/e/i/mnop/qrst/CWD
+: ${ZSH_PWD4PROMPT[num_of_parent_dirs_of_cwd_unshortened]="3"}
+
+
+function _zsh_pwd4prompt_print_short_path() {
+    local path="$1"
+    # ディレクトリ名の省略の仕方
+        # 最初のN文字だけ表示
+        # 隠しファイルは「.」の次の文字も含む
+        # 横幅が一定以上（絶対サイズ・%での画面横幅に対する相対サイズ）になるときは、
+            # 重要でない部分を「...」や「…5」のように省略。
+                # → $_ZSH_PWD4PROMPT_OMISSION_COUNTが省略したディレクトリ数に変換される
+    # 特定のディレクトリは省略しない
+        # $HOMEや.gitのあるディレクトリと、その直下N個は省略しない
+        # カレントとその上N個は省略しない
+        # 省略しないディレクトリでも、あまりに長い名前のものは名前を省略
+}
+
+function _zsh_pwd4prompt_short_path() {
+    local TARGET_PATH="$1"
+    local NUM_NOT_TO_BE_OMITTED="$2"
+    local TOPATH="${3-"^$HOME\$|^/\$"}"
+
+    local retval="$TARGET_PATH"
 
     [[ "$TARGET_PATH" = "/" ]] && {echo "/";return}
 
-    (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && unsetopt ksharrays
-
-    cd "$TARGET_PATH"
-
-    i=0
-    while [[ ! "$PWD" =~ "$TOPATH" && "$i" -lt "$NUM_NOT_TO_BE_OMITTED" ]]; do
-        basename="${PWD##*/}"
-        retval="/${basename}${retval}"
-        cd ..
-        let i++
+    for _ in {0..${NUM_NOT_TO_BE_OMITTED}}; do
+        local retval="${TARGET_PATH%/*}"
+        [[ "$retval" =~ "$TOPATH" ]] && break
     done
+    echo "${retval/"$HOME"/"~"}"
+    # TODO:
+    return
 
-    if [[ "$i" -ge "$NUM_NOT_TO_BE_OMITTED" ]]; then
-        while [[ ! "$PWD" =~ "$TOPATH" ]]; do
+    (
+        (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && unsetopt ksharrays
+
+        cd "$TARGET_PATH"
+
+        i=0
+        while [[ ! "$PWD" =~ "$TOPATH" && "$i" -lt "$NUM_NOT_TO_BE_OMITTED" ]]; do
             basename="${PWD##*/}"
-            if [ "${basename[1]}" = "." ]; then
-                retval="/.${basename[2]}${retval}"
-            else
-                retval="/${basename[1]}${retval}"
-            fi
+            retval="/${basename}${retval}"
             cd ..
+            let i++
         done
-    fi
 
-    if [[ "$PWD" = "$HOME" ]]; then
-        retval="~${retval}"
-    fi
+        if [[ "$i" -ge "$NUM_NOT_TO_BE_OMITTED" ]]; then
+            while [[ ! "$PWD" =~ "$TOPATH" ]]; do
+                basename="${PWD##*/}"
+                if [ "${basename[1]}" = "." ]; then
+                    retval="/.${basename[2]}${retval}"
+                else
+                    retval="/${basename[1]}${retval}"
+                fi
+                cd ..
+            done
+        fi
 
-    (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && setopt ksharrays
+        if [[ "$PWD" = "$HOME" ]]; then
+            retval="~${retval}"
+        fi
 
-    echo "${retval}"
-)
+        (( ${+_ZSH_PWD4PROMPT_KSHARRAYS_IS_ENABLED} )) && setopt ksharrays
+
+        echo "${retval}"
+    )
+}
 
 
 function _zsh_pwd4prompt_path_depth_difference() (
