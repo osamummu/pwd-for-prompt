@@ -44,37 +44,55 @@ function _zsh_pwd4prompt_search_gitroot_path() {
 }
 
 
-(( ${+ZSH_PWD4PROMPT} )) || typeset -A ZSH_PWD4PROMPT
+(( ${+ZSH_PWD4PROMPT} )) || typeset -gA ZSH_PWD4PROMPT
 # ディレクトリ名を短くするときの長さ
 # Ex) if this option is "2": /foo/bar/ → /fo/ba/
-: ${ZSH_PWD4PROMPT[length_if_shortening]="1"}
+: ${ZSH_PWD4PROMPT[len_if_shortening]="1"}
+# ZSH_PWD4PROMPT[len_if_shortening]で、1文字として扱う文字。
+# 「[[  ]]」による正規表現の[]の中に入れる
+# TODO:
+# : ${ZSH_PWD4PROMPT[singlewidth_characters_pattern]=" -"}
 # 隠しディレクトリを短縮するときに特別なあつかいをするか
 # Ex) if this option is "1": /.foo/ → /.f/
 #     if this option is "0": /.foo/ → /./
 : ${ZSH_PWD4PROMPT[enable_special_shortening_of_hidden_dirs]="1"}
 # pwd-for-promptの出力の最大幅。数字のみで絶対値、%を末尾に付けると画面幅に対する相対値
+# これを超えるとpathの省略が行われる。空や0, 0%なら省略を行わない
 : ${ZSH_PWD4PROMPT[max_width]="33%"}
-# ZSH_PWD4PROMPT[max_width]を超えるときに
-: ${ZSH_PWD4PROMPT[enable_multiple_dirs_omission_with_forcing]="1"}
-# 長過ぎるpathを省略するときに代わりに出力する文字列（"#"が省略したディレクトリ数に置き換えられる。"##"は"#"に）
-: ${ZSH_PWD4PROMPT[str_replacing_multiple_omitted_dirs]="…#"}
+# ZSH_PWD4PROMPT[max_width]を超えるpathを省略するときに代わりに出力する文字列
+# "\0"が省略したディレクトリ数に置き換えられる
+: ${ZSH_PWD4PROMPT[str_replacing_multiple_omitted_dirs]="…\0"}
 # cwdの親ディレクトリの短縮しない個数
 # Ex) if this option is "2": /abcd/efgh/ijkl/mnop/qrst/CWD → /a/e/i/mnop/qrst/CWD
 : ${ZSH_PWD4PROMPT[num_of_parent_dirs_of_cwd_unshortened]="3"}
+# 置き換えするパターン（Ex: ^$HOME → ~, ~/Downloads/ → ~// など）
+# 「対象のパターン\0置き換える文字列」の形式で'\n'区切りのリスト
+# ※先頭から順に適応される
+: ${ZSH_PWD4PROMPT[patterns_to_replace]="${HOME}\0~\n~/Downloads\0~/DL"}
+# 短縮しないディレクトリでも、この文字数を超えるなら短縮する（この文字数以降を出力しない）
+# max_widthと同じ指定法
+: ${ZSH_PWD4PROMPT[upper_limit_on_dirname_len]="8"}
+
+# CWD直下のファイルの個数表示のfmt
+# \nが通常ファイル数、\rが隠しファイル数、\0が合計
+: ${ZSH_PWD4PROMPT[fmt_to_count_files_in_cwd]="\n+\r"}
+
+function _zsh_pwd4prompt_print() {
+    local cwd="$PWD"
+    local sep="\n"
+    local rule_sep="\0"
+    for rule in ${(ps.$sep.)ZSH_PWD4PROMPT[patterns_to_replace]}; do
+        local tmp=(${(ps.$rule_sep.)rule})
+        local pattern="$tmp[1]"
+        local replacement="$tmp[2]"
+        local cwd="${cwd/${pattern}/${replacement}}"
+    done
+    echo "$cwd"
+}
 
 
 function _zsh_pwd4prompt_print_short_path() {
     local path="$1"
-    # ディレクトリ名の省略の仕方
-        # 最初のN文字だけ表示
-        # 隠しファイルは「.」の次の文字も含む
-        # 横幅が一定以上（絶対サイズ・%での画面横幅に対する相対サイズ）になるときは、
-            # 重要でない部分を「...」や「…5」のように省略。
-                # → $_ZSH_PWD4PROMPT_OMISSION_COUNTが省略したディレクトリ数に変換される
-    # 特定のディレクトリは省略しない
-        # $HOMEや.gitのあるディレクトリと、その直下N個は省略しない
-        # カレントとその上N個は省略しない
-        # 省略しないディレクトリでも、あまりに長い名前のものは名前を省略
 }
 
 function _zsh_pwd4prompt_short_path() {
