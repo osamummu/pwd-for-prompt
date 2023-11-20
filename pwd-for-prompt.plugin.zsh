@@ -77,6 +77,32 @@ function _zsh_pwd4prompt_search_gitroot_path() {
 # \nが通常ファイル数、\rが隠しファイル数、\0が合計
 : ${ZSH_PWD4PROMPT[fmt_to_count_files_in_cwd]="\n+\r"}
 
+
+# $HOME を置き換える文字列
+: ${ZSH_PWD4PROMPT[str_to_replace_home_dir]="~"}
+# $HOME 下のディレクトリの短縮スタイル
+: ${ZSH_PWD4PROMPT[style_of_dirs_under_home]="3,.1"}
+: ${ZSH_PWD4PROMPT[style_of_dirs_above_home]="3,.1"}
+
+ZSH_PWD4PROMPT[omission_str]="…"
+ZSH_PWD4PROMPT[replacements_1]="^$HOME\0~"
+ZSH_PWD4PROMPT[dirname_replacements_1]="^$HOME/Downloads\0DL"
+# 現在のディレクトリが \0 の前に書かれたディレクトリの子や孫である時、pwdの表示に \0 の後に書かれたルールを適用する
+# \0 の前に書かれたディレクトリの子や孫でない時は、次の行について調べる
+    # UNDER は、\0 の前に書かれたディレクトリの子の方向のディレクトリの短縮スタイル。｢短縮しない深さ,何文字に短縮するか｣
+        # 「短縮しない深さ」の値が負なら、短縮する深さとなる
+        # 「短縮しない深さ」の値に小数点がある時、｢短縮しない深さ.そこから短縮する深さ｣となる。負数が含まれていたら反転する
+        # ABOVE は、現在のディレクトリの親の方向のディレクトリの短縮スタイル。｢短縮しない深さ,何文字に短縮するか｣
+        # UNDER, ABOVE に｢3,1,1｣のように3つ目の値を書くと、それは隠しファイルの短縮文字数となる。指定しない時は「短縮文字数+1」
+        # ABOVE, UNDER は、短縮文字数が｢...｣の時は省略文字列に置き換える。イコールが｢$=｣の時はその後に書かれた文字列に置き換える
+    # REPLSとDNREPLS は、適用する置換の名前一覧
+    # ADDRULES は、追加ルールの名前一覧。先に書かれたものほど優先される。
+        # ｢!1｣のように名前の前に｢!｣がある時、そのルールがマッチしたなら以降のルールを読まない
+ZSH_PWD4PROMPT[rule]="$HOME\0UNDER=1,1\rABOVE=3,1\rREPLS=1\rDNREPLS=1\rADDRULES=1
+/\0BEGIN=1,1\rEND=3,1"
+# OVERRIDE は、これまでに適用されたルールのUNDER, ABOVE がこのルールのUNDER, ABOVE と範囲がかぶっていた時に、こちらを優先させる
+ZSH_PWD4PROMPT[additional_rule_1]="{GITROOT}\0ABOVE=1,...\rUNDER=3,1\rREPLS=1\rDNREPLS=1\rOVERRIDE"
+
 function _zsh_pwd4prompt_print() {
     local cwd="$PWD"
     local sep="\n"
