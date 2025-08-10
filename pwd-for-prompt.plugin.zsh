@@ -113,7 +113,7 @@ function pwd-for-prompt() (
     local gitroot_basename
     local path_after_gitroot
     local gitroot="$(_zsh_pwd4prompt_search_gitroot_path)"
-    local out="${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}"
+    local out="${ZSH_PWD4PROMPT_STYLE}"
 
     # Ignore ".git" directory in the directories that match the pattern written in
     # ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS.
@@ -143,7 +143,7 @@ function pwd-for-prompt() (
       out+="$(_zsh_pwd4prompt_short_path "$PWD" "$ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY")"
     fi
 
-    out+="${ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE}"
+    out+="${ZSH_PWD4PROMPT_RESET_STYLE}"
 
     builtin echo "$out"
   } 2>/dev/null
@@ -173,13 +173,14 @@ ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )
 # TODO: directory style
 # ZSH_PWD4PROMPT_PATH_STYLE="%{$fg_bold[cyan]%}"
 
-# color for prefix and suffix to whole
-ZSH_PWD4PROMPT_PREFIX_TO_WHOLE="%{$fg_bold[cyan]%}"
-ZSH_PWD4PROMPT_SUFFIX_TO_WHOLE="%{${reset_color}%}"
+# color for output
+ZSH_PWD4PROMPT_STYLE="%{$fg_bold[cyan]%}"
+# escape sequences for reseting colors
+ZSH_PWD4PROMPT_RESET_STYLE="%{${reset_color}%}"
 
 # The prefix and suffix of the directory containing ".git".
 ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}$(_zsh_pwd4prompt_gui_cui '' 'G:')"
-ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_PREFIX_TO_WHOLE}"
+ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_STYLE}"
 
 
 
