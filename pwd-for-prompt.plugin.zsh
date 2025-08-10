@@ -156,11 +156,11 @@ function pwd-for-prompt() (
 ############################################
 
 # The number of parent directories to display
-ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY="2"
+: ${ZSH_PWD4PROMPT_NUMBER_OF_DIRECTORIES_TO_DISPLAY="2"}
 
 # The array of directory pattern to ignore when searching for ".git".
 # The pattern is such that "[[ "$PWD" =~ "PATTERN" ]]" is true
-ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )
+: ${ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )}
 
 
 
@@ -174,13 +174,13 @@ ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=( "^${HOME}\$" )
 # ZSH_PWD4PROMPT_PATH_STYLE="%{$fg_bold[cyan]%}"
 
 # color for output
-ZSH_PWD4PROMPT_STYLE="%{$fg_bold[cyan]%}"
+: ${ZSH_PWD4PROMPT_STYLE="%{$fg_bold[cyan]%}"}
 # escape sequences for reseting colors
-ZSH_PWD4PROMPT_RESET_STYLE="%{${reset_color}%}"
+: ${ZSH_PWD4PROMPT_RESET_STYLE="%{${reset_color}%}"}
 
 # The prefix and suffix of the directory containing ".git".
-ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}$(_zsh_pwd4prompt_gui_cui '' 'G:')"
-ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_STYLE}"
+: ${ZSH_PWD4PROMPT_GITROOT_PREFIX="%{$fg_bold[yellow]%}$(_zsh_pwd4prompt_gui_cui '' 'G:')"}
+: ${ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_STYLE}"}
 
 
 
