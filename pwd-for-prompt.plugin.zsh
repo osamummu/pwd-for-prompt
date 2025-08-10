@@ -160,8 +160,8 @@ function pwd-for-prompt() (
 
 # The array of directory pattern to ignore when searching for ".git".
 # The pattern is such that "[[ "$PWD" =~ "PATTERN" ]]" is true
-if [[ -z "${ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS}" ]]; then
-  declare -a ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=("^${HOME}\$")
+if [[ "${ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS:-\n}" = "\n" ]]; then
+  ZSH_PWD4PROMPT_GITROOT_SEARCH_EXCLUSIONS=("^${HOME}\$")
 fi
 
 
