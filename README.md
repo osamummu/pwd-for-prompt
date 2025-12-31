@@ -3,8 +3,6 @@
 >
 > This is because a potential bug has been found in this program,
 > but the author has not time to fix it.
->
-> This project will be removed in the future.
 
 
 # [DEPRECATED] Abbreviated current working directory for zsh prompt
