@@ -1,4 +1,13 @@
-# Abbreviated current working directory for zsh prompt
+> [!CAUTION]
+> This project is **deprecated**.
+>
+> This is because a potential bug has been found in this program,
+> but the author cannot afford to fix it.
+>
+> This project will be removed in the future.
+
+
+# [DEPRECATED] Abbreviated current working directory for zsh prompt
 This program provides a command `pwd-for-prompt` that abbreviates and outputs the current working directory.
 
 ## Example
@@ -75,4 +84,7 @@ Set the suffix of the directory containing `.git`.
 Ex: Reset color.
 ZSH_PWD4PROMPT_GITROOT_SUFFIX="%{${reset_color}%}${ZSH_PWD4PROMPT_STYLE}"
 ```
+
+## License
+MIT
 
