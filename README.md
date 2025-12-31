@@ -2,7 +2,7 @@
 > This project is **deprecated**.
 >
 > This is because a potential bug has been found in this program,
-> but the author cannot afford to fix it.
+> but the author has not time to fix it.
 >
 > This project will be removed in the future.
 
